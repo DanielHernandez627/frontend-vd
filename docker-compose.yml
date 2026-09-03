@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  frontend-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: frontend-vd-dev
+    ports:
+      - "4200:4200"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+
+  frontend-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: frontend-vd-prod
+    ports:
+      - "8080:80"
+    profiles:
+      - production
