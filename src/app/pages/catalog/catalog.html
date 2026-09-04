@@ -1,0 +1,69 @@
+<div class="catalog-container">
+  <div class="header">
+    <h1>🎬 Catálogo Multimedia</h1>
+    <p>Explora tus series, anime y películas locales. Haz clic directamente sobre cualquier episodio para iniciar la transmisión con Skip Intro.</p>
+  </div>
+
+  <div class="grid" *ngIf="catalogItems.length > 0">
+    <mat-card class="media-card" *ngFor="let item of catalogItems">
+      <div class="card-image-container">
+        <img *ngIf="item.coverImageUrl" [src]="item.coverImageUrl" [alt]="item.title" class="cover-image" />
+        <div *ngIf="!item.coverImageUrl" class="card-image-placeholder">
+          <mat-icon class="play-preview">movie</mat-icon>
+        </div>
+        <div class="media-type-badge">{{ item.type || 'ANIME_SERIES' }}</div>
+      </div>
+
+      <mat-card-header>
+        <mat-card-title>{{ item.title }}</mat-card-title>
+        <mat-card-subtitle>
+          {{ item.seasons ? item.seasons.length : 1 }} Temporada(s) • {{ getTotalEpisodesCount(item) }} Episodio(s)
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <p class="description">{{ item.description }}</p>
+
+        <!-- SECCIÓN DE EPISODIOS DISPONIBLES EN LA CARD -->
+        <div class="episodes-preview-section" *ngIf="item.seasons && item.seasons.length > 0">
+          <div *ngFor="let season of item.seasons" class="season-group">
+            <div class="season-header-row">
+              <mat-icon class="season-icon">video_library</mat-icon>
+              <span class="season-label">{{ season.title || ('Temporada ' + season.seasonNumber) }}</span>
+            </div>
+
+            <div class="episodes-chips-container">
+              <a
+                *ngFor="let ep of season.episodes"
+                class="episode-chip"
+                [routerLink]="['/player', item.id]"
+                [queryParams]="{ episodeId: ep.id }">
+                <mat-icon class="chip-icon">play_circle_outline</mat-icon>
+                <span class="ep-text">Ep. {{ ep.episodeNumber }}: {{ ep.title }}</span>
+              </a>
+
+              <div *ngIf="!season.episodes || season.episodes.length === 0" class="no-episodes-hint">
+                Sin episodios escaneados aún
+              </div>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+
+      <mat-card-actions>
+        <a mat-raised-button color="primary" [routerLink]="['/player', item.id]" class="play-btn">
+          <mat-icon>play_arrow</mat-icon> Ver Serie Completa
+        </a>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <div *ngIf="catalogItems.length === 0" class="empty-catalog-state">
+    <mat-icon class="empty-icon">video_library</mat-icon>
+    <h3>No hay contenidos registrados en la base de datos</h3>
+    <p>Ingresa al panel de administración para importar una temporada de videos .mp4 en lote.</p>
+    <a mat-raised-button color="accent" routerLink="/admin" class="go-admin-btn">
+      <mat-icon>settings</mat-icon> Ir al Panel de Administración
+    </a>
+  </div>
+</div>

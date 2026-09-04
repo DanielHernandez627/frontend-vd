@@ -1,0 +1,91 @@
+<div class="player-container">
+  <div class="top-nav">
+    <a mat-stroked-button class="back-btn" routerLink="/catalog">
+      <mat-icon>arrow_back</mat-icon> Volver al Catálogo
+    </a>
+    <div class="header-info" *ngIf="mediaContent">
+      <h2 class="content-title">{{ mediaContent.title }}</h2>
+      <span class="type-badge">{{ mediaContent.type }}</span>
+    </div>
+  </div>
+
+  <div class="player-layout">
+    <!-- REPRODUCTOR DE VIDEO PRINCIPAL -->
+    <div class="main-player-section">
+      <mat-card class="video-card">
+        <div class="video-wrapper">
+          <video
+            #videoPlayer
+            class="video-element"
+            [src]="videoStreamUrl"
+            (timeupdate)="onTimeUpdate($event)"
+            controls
+            autoplay
+            preload="metadata">
+          </video>
+
+          <div *ngIf="!selectedEpisode" class="video-placeholder-overlay">
+            <mat-icon class="video-icon">ondemand_video</mat-icon>
+            <p class="placeholder-text">Selecciona un episodio para iniciar la transmisión HTTP 206</p>
+          </div>
+
+          <button
+            *ngIf="currentSkipInterval"
+            class="skip-intro-btn"
+            (click)="executeSkip()">
+            <mat-icon>fast_forward</mat-icon> {{ currentSkipInterval.label || 'Saltar Opening (+90s)' }}
+          </button>
+        </div>
+
+        <div class="now-playing-bar" *ngIf="selectedEpisode">
+          <div class="playing-details">
+            <h3 class="episode-now-title">En reproducción: {{ selectedEpisode.title }}</h3>
+            <p class="video-path-hint">Ruta de video: {{ selectedEpisode.videoPath }}</p>
+          </div>
+        </div>
+      </mat-card>
+    </div>
+
+    <!-- PANEL LATERAL DE SELECCIÓN DE TEMPORADAS Y EPISODIOS -->
+    <div class="episodes-sidebar" *ngIf="mediaContent">
+      <mat-card class="sidebar-card">
+        <mat-card-header>
+          <mat-card-title>📋 Episodios Disponibles</mat-card-title>
+        </mat-card-header>
+
+        <mat-card-content>
+          <!-- SELECTOR DE TEMPORADAS -->
+          <div class="season-selector" *ngIf="mediaContent.seasons && mediaContent.seasons.length > 0">
+            <button
+              *ngFor="let season of mediaContent.seasons"
+              class="season-tab-btn"
+              [class.active]="selectedSeason?.id === season.id"
+              (click)="selectSeason(season)">
+              {{ season.title || ('Temporada ' + season.seasonNumber) }}
+            </button>
+          </div>
+
+          <!-- LISTA DE EPISODIOS DE LA TEMPORADA SELECCIONADA -->
+          <div class="episodes-list" *ngIf="selectedSeason">
+            <div
+              *ngFor="let episode of selectedSeason.episodes"
+              class="episode-item"
+              [class.active-episode]="selectedEpisode?.id === episode.id"
+              (click)="selectEpisode(episode)">
+              <div class="episode-badge">Ep. {{ episode.episodeNumber }}</div>
+              <div class="episode-info">
+                <h4 class="episode-title-text">{{ episode.title }}</h4>
+              </div>
+              <mat-icon class="play-icon">{{ selectedEpisode?.id === episode.id ? 'graphic_eq' : 'play_circle' }}</mat-icon>
+            </div>
+
+            <div *ngIf="!selectedSeason.episodes || selectedSeason.episodes.length === 0" class="no-episodes-msg">
+              <mat-icon>folder_off</mat-icon>
+              <p>No se encontraron episodios en esta temporada.</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>

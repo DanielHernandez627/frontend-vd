@@ -1,0 +1,164 @@
+<div class="admin-container">
+  <mat-card class="admin-card">
+    <mat-card-header class="header-with-toggle">
+      <div>
+        <mat-card-title>⚙️ Panel de Administración</mat-card-title>
+        <mat-card-subtitle>Gestión de metadatos, carga de películas e importación masiva de temporadas en lote</mat-card-subtitle>
+      </div>
+      <mat-button-toggle-group [(ngModel)]="activeTab" class="mode-toggle">
+        <mat-button-toggle value="batch">⚡ Carga Masiva de Temporada</mat-button-toggle>
+        <mat-button-toggle value="single">🎬 Película / Carga Individual</mat-button-toggle>
+      </mat-button-toggle-group>
+    </mat-card-header>
+
+    <mat-card-content>
+      <!-- MODO 1: ESCANEO Y CARGA MASIVA DE TEMPORADA -->
+      <form *ngIf="activeTab === 'batch'" class="admin-form" (ngSubmit)="onBatchSubmit()">
+        <h3 class="section-title">⚡ 1. Selección de Contenido y Datos de la Temporada</h3>
+        <p class="section-desc">Selecciona o escribe el nombre de la Serie/Anime. La serie y temporada se crearán automáticamente si no existen.</p>
+
+        <div class="row">
+          <mat-form-field appearance="outline" class="flex-2" *ngIf="catalogList.length > 0">
+            <mat-label>Serie / Anime Existente</mat-label>
+            <mat-select [(ngModel)]="batchData.mediaContentId" name="mediaContentId" (selectionChange)="onMediaSelectChange($event.value)">
+              <mat-option *ngFor="let item of catalogList" [value]="item.id">
+                {{ item.title }} ({{ item.type }})
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="flex-2">
+            <mat-label>Título de la Serie / Anime</mat-label>
+            <input matInput [(ngModel)]="batchData.mediaTitle" name="mediaTitle" placeholder="Ej. Attack on Titan / Naruto Shippuden" required />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="flex-1">
+            <mat-label>N° Temporada</mat-label>
+            <input matInput type="number" [(ngModel)]="batchData.seasonNumber" name="seasonNumber" min="1" required />
+          </mat-form-field>
+        </div>
+
+        <div class="row">
+          <mat-form-field appearance="outline" class="flex-2">
+            <mat-label>Título de la Temporada (Opcional)</mat-label>
+            <input matInput [(ngModel)]="batchData.seasonTitle" name="seasonTitle" placeholder="Ej. Temporada 1 / Arco de Shibuya" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="flex-1">
+            <mat-label>Extensión de Archivo</mat-label>
+            <input matInput [(ngModel)]="batchData.fileExtension" name="fileExtension" placeholder=".mp4" required />
+          </mat-form-field>
+        </div>
+
+        <h3 class="section-title">📂 2. Ruta de la Carpeta Local en el Disco</h3>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Ruta de la Carpeta en el Disco Local</mat-label>
+          <input matInput [(ngModel)]="batchData.directoryPath" name="directoryPath" placeholder="Ej. /media/videos/serie_temporada1" required />
+          <mat-hint>Ingresa la ruta absoluta de la carpeta en tu disco local donde están alojados los videos .mp4</mat-hint>
+        </mat-form-field>
+
+        <h3 class="section-title">⏱ 3. Herencia de Skip Intro por Defecto (Formato MM:SS)</h3>
+        <p class="section-desc">Define el tiempo de opening por defecto para todos los episodios escaneados (ej. <b>0:38</b> al <b>2:11</b>).</p>
+
+        <div class="row">
+          <mat-form-field appearance="outline" class="flex-1">
+            <mat-label>Inicio Intro por Defecto (Minuto:Segundo)</mat-label>
+            <input matInput [(ngModel)]="batchData.defaultIntroStart" name="defaultIntroStart" placeholder="Ej. 0:38" (input)="updateCalculatedBatch()" />
+            <mat-hint *ngIf="batchStartSeconds > 0">Equivale a: {{ batchStartSeconds }} segundos</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="flex-1">
+            <mat-label>Fin Intro por Defecto (Minuto:Segundo)</mat-label>
+            <input matInput [(ngModel)]="batchData.defaultIntroEnd" name="defaultIntroEnd" placeholder="Ej. 2:11" (input)="updateCalculatedBatch()" />
+            <mat-hint *ngIf="batchEndSeconds > 0">Equivale a: {{ batchEndSeconds }} segundos</mat-hint>
+          </mat-form-field>
+        </div>
+
+        <div class="submit-row">
+          <button mat-raised-button color="accent" type="submit" class="batch-save-btn">
+            <mat-icon>flash_on</mat-icon> Crear Temporada y Escanear Archivos .mp4
+          </button>
+        </div>
+      </form>
+
+      <!-- MODO 2: CARGA INDIVIDUAL / PELÍCULA -->
+      <form *ngIf="activeTab === 'single'" class="admin-form" (ngSubmit)="onSingleSubmit()">
+        <h3 class="section-title">🎬 1. Información General del Contenido</h3>
+
+        <div class="row">
+          <mat-form-field appearance="outline" class="flex-2">
+            <mat-label>Título del Contenido</mat-label>
+            <input matInput [(ngModel)]="singleData.title" name="title" placeholder="Ej. Naruto Shippuden / Band of Brothers" required />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="flex-1">
+            <mat-label>Tipo de Contenido</mat-label>
+            <mat-select [(ngModel)]="singleData.type" name="type">
+              <mat-option value="ANIME_SERIES">Anime</mat-option>
+              <mat-option value="LIVE_ACTION_SERIES">Serie Live Action</mat-option>
+              <mat-option value="MOVIE">Película</mat-option>
+              <mat-option value="DOCUMENTARY">Documental</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>URL o Ruta de la Carátula (Poster / Miniatura)</mat-label>
+          <input matInput [(ngModel)]="singleData.coverImageUrl" name="coverImageUrl" placeholder="Ej. https://.../poster.jpg o /assets/images/series.jpg" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Descripción</mat-label>
+          <textarea matInput [(ngModel)]="singleData.description" name="description" rows="2" placeholder="Sinopsis o descripción del contenido..."></textarea>
+        </mat-form-field>
+
+        <h3 class="section-title">📽 2. Configuración de Episodio y Archivo de Video (.mp4)</h3>
+
+        <div class="row">
+          <mat-form-field appearance="outline" class="flex-1">
+            <mat-label>Temporada N°</mat-label>
+            <input matInput type="number" [(ngModel)]="singleData.seasonNumber" name="seasonNumber" min="1" required />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="flex-1">
+            <mat-label>Episodio N°</mat-label>
+            <input matInput type="number" [(ngModel)]="singleData.episodeNumber" name="episodeNumber" min="1" required />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="flex-2">
+            <mat-label>Título del Episodio</mat-label>
+            <input matInput [(ngModel)]="singleData.episodeTitle" name="episodeTitle" placeholder="Ej. Capítulo 1: El Comienzo" required />
+          </mat-form-field>
+        </div>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Ruta del Archivo de Video Local (.mp4)</mat-label>
+          <input matInput [(ngModel)]="singleData.videoPath" name="videoPath" placeholder="Ej. /media/videos/episodio01.mp4" required />
+        </mat-form-field>
+
+        <h3 class="section-title">⏱ 3. Configuración de Skip Intro (Formato MM:SS)</h3>
+
+        <div class="row">
+          <mat-form-field appearance="outline" class="flex-1">
+            <mat-label>Inicio Intro (Minuto:Segundo)</mat-label>
+            <input matInput [(ngModel)]="singleData.introStart" name="introStart" placeholder="Ej. 0:38 o 1:30" (input)="updateCalculatedSingle()" />
+            <mat-hint *ngIf="singleStartSeconds > 0">Equivale a: {{ singleStartSeconds }} segundos</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="flex-1">
+            <mat-label>Fin Intro (Minuto:Segundo)</mat-label>
+            <input matInput [(ngModel)]="singleData.introEnd" name="introEnd" placeholder="Ej. 2:11 o 3:00" (input)="updateCalculatedSingle()" />
+            <mat-hint *ngIf="singleEndSeconds > 0">Equivale a: {{ singleEndSeconds }} segundos</mat-hint>
+          </mat-form-field>
+        </div>
+
+        <div class="submit-row">
+          <button mat-raised-button color="primary" type="submit" class="save-btn">
+            <mat-icon>save</mat-icon> Guardar Contenido Individual
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

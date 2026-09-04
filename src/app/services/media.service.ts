@@ -24,6 +24,7 @@ export interface Season {
   seasonNumber: number;
   title: string;
   episodes: Episode[];
+  defaultSkipTimestamps?: SkipTimestamp[];
 }
 
 export interface MediaContent {
@@ -34,6 +35,22 @@ export interface MediaContent {
   type: 'ANIME_SERIES' | 'LIVE_ACTION_SERIES' | 'MOVIE' | 'OVA' | 'DOCUMENTARY';
   createdAt: string;
   seasons: Season[];
+}
+
+export interface BatchImportRequest {
+  mediaTitle?: string;
+  seasonNumber?: number;
+  seasonTitle?: string;
+  directoryPath: string;
+  fileExtension?: string;
+  defaultIntroStart?: string;
+  defaultIntroEnd?: string;
+}
+
+export interface BatchImportResponse {
+  importedCount: number;
+  seasonId: number;
+  importedFileNames: string[];
 }
 
 @Injectable({
@@ -50,6 +67,18 @@ export class MediaService {
 
   getMediaContentDetails(id: number | string): Observable<MediaContent> {
     return this.http.get<MediaContent>(`${this.apiUrl}/media/${id}`);
+  }
+
+  createMediaContent(payload: Partial<MediaContent>): Observable<MediaContent> {
+    return this.http.post<MediaContent>(`${this.apiUrl}/media`, payload);
+  }
+
+  batchImportSeason(mediaContentId: number | string, payload: BatchImportRequest): Observable<BatchImportResponse> {
+    return this.http.post<BatchImportResponse>(`${this.apiUrl}/media/${mediaContentId}/batch-import`, payload);
+  }
+
+  batchImportEpisodes(seasonId: number | string, payload: BatchImportRequest): Observable<BatchImportResponse> {
+    return this.http.post<BatchImportResponse>(`${this.apiUrl}/seasons/${seasonId}/batch-import`, payload);
   }
 
   getSkipTimestamps(episodeId: number | string): Observable<SkipTimestamp[]> {

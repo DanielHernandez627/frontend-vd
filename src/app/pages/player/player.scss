@@ -1,0 +1,319 @@
+.player-container {
+  padding: 2rem;
+  max-width: 1350px;
+  margin: 0 auto;
+}
+
+.top-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1.75rem;
+
+  .back-btn {
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    font-weight: 500;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.15) !important;
+    }
+
+    mat-icon {
+      color: #ffffff !important;
+    }
+  }
+
+  .header-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    .content-title {
+      margin: 0;
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .type-badge {
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+  }
+}
+
+.player-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 1.75rem;
+
+  @media (max-width: 992px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.video-card {
+  background: #000;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.video-wrapper {
+  position: relative;
+  width: 100%;
+  height: 520px;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.video-element {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.video-placeholder-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle, #1e293b 0%, #090d16 100%);
+  pointer-events: none;
+
+  .video-icon {
+    font-size: 80px;
+    width: 80px;
+    height: 80px;
+    color: #38bdf8;
+    margin-bottom: 1rem;
+  }
+
+  .placeholder-text {
+    color: #cbd5e1;
+    font-size: 1.1rem;
+    font-weight: 500;
+    text-align: center;
+    padding: 0 1rem;
+  }
+}
+
+.skip-intro-btn {
+  position: absolute;
+  bottom: 3.5rem;
+  right: 2.5rem;
+  z-index: 10;
+  background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 28px;
+  padding: 0.75rem 1.6rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(37, 99, 235, 0.5);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  mat-icon {
+    color: #ffffff !important;
+  }
+
+  &:hover {
+    transform: translateY(-3px) scale(1.04);
+    box-shadow: 0 8px 25px rgba(124, 58, 237, 0.7);
+    background: linear-gradient(135deg, #1d4ed8 0%, #6d28d9 100%);
+  }
+
+  &:active {
+    transform: translateY(0) scale(0.98);
+  }
+}
+
+.now-playing-bar {
+  background: #1e293b;
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .episode-now-title {
+    margin: 0 0 0.25rem 0;
+    color: #ffffff;
+    font-size: 1.15rem;
+    font-weight: 600;
+  }
+
+  .video-path-hint {
+    margin: 0;
+    color: #94a3b8;
+    font-size: 0.85rem;
+    font-mono: monospace;
+    word-break: break-all;
+  }
+}
+
+.sidebar-card {
+  background: #1e293b !important;
+  color: #ffffff !important;
+  border-radius: 16px;
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  mat-card-title {
+    color: #ffffff !important;
+    font-size: 1.25rem;
+    font-weight: 600;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+    &::before {
+      content: '';
+    }
+  }
+}
+
+.season-selector {
+  display: flex;
+  gap: 0.5rem;
+  margin: 1rem 0;
+  flex-wrap: wrap;
+
+  .season-tab-btn {
+    background: #0f172a;
+    color: #cbd5e1;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba(56, 189, 248, 0.1);
+      color: #38bdf8;
+    }
+
+    &.active {
+      background: #3b82f6;
+      color: #ffffff;
+      border-color: #3b82f6;
+      font-weight: 600;
+    }
+  }
+}
+
+.episodes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-height: 480px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+  }
+}
+
+.episode-item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem;
+  background: #0f172a;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #1e293b;
+    border-color: #38bdf8;
+    transform: translateX(3px);
+  }
+
+  &.active-episode {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.25) 0%, rgba(124, 58, 237, 0.25) 100%);
+    border: 1px solid #38bdf8;
+
+    .episode-badge {
+      background: #38bdf8;
+      color: #0f172a;
+    }
+
+    .episode-title-text {
+      color: #38bdf8;
+      font-weight: 600;
+    }
+
+    .play-icon {
+      color: #38bdf8;
+    }
+  }
+
+  .episode-badge {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.35rem 0.6rem;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+
+  .episode-info {
+    flex: 1;
+    min-width: 0;
+
+    .episode-title-text {
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: #f1f5f9;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .play-icon {
+    color: #94a3b8;
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
+}
+
+.no-episodes-msg {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  color: #94a3b8;
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 0.5rem;
+  }
+}
