@@ -37,6 +37,16 @@ export class CatalogComponent implements OnInit {
     this.mediaService.getCatalog().subscribe({
       next: (data) => {
         this.catalogItems = data || [];
+        this.catalogItems.forEach(item => {
+          if (item.seasons) {
+            item.seasons.sort((a, b) => (a.seasonNumber || 0) - (b.seasonNumber || 0));
+            item.seasons.forEach(season => {
+              if (season.episodes) {
+                season.episodes.sort((a, b) => (a.episodeNumber || 0) - (b.episodeNumber || 0));
+              }
+            });
+          }
+        });
         this.cdr.detectChanges();
       },
       error: (err) => {

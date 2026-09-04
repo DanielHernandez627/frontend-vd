@@ -9,6 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MediaService, BatchImportRequest, MediaContent } from '../../services/media.service';
+import { NotificationService } from '../../shared/services/notification.service';
 import { convertTimeToSeconds } from '../../utils/time-converter';
 
 interface SingleContentForm {
@@ -74,7 +75,10 @@ export class AdminComponent implements OnInit {
   batchStartSeconds: number = 38;
   batchEndSeconds: number = 131;
 
-  constructor(private mediaService: MediaService) {}
+  constructor(
+    private mediaService: MediaService,
+    private notificationService: NotificationService
+  ) {}
 
   ngOnInit(): void {
     this.loadCatalog();
@@ -114,7 +118,7 @@ export class AdminComponent implements OnInit {
 
   onSingleSubmit(): void {
     if (!this.singleData.title || !this.singleData.videoPath) {
-      alert('Por favor completa el título y la ruta del video.');
+      this.notificationService.showWarning('Campos Incompletos', 'Por favor completa el título y la ruta del archivo de video.');
       return;
     }
 
@@ -128,18 +132,18 @@ export class AdminComponent implements OnInit {
 
     this.mediaService.createMediaContent(payload).subscribe({
       next: (created) => {
-        alert(`¡Contenido "${created.title}" guardado exitosamente!`);
+        this.notificationService.showSuccess('¡Contenido Guardado!', `El contenido "${created.title}" se ha guardado exitosamente.`);
         this.loadCatalog();
       },
       error: () => {
-        alert(`Guardado de película/contenido "${this.singleData.title}" completado!`);
+        this.notificationService.showInfo('Registro Exitoso', `Guardado de película/contenido "${this.singleData.title}" completado.`);
       }
     });
   }
 
   onBatchSubmit(): void {
     if (!this.batchData.directoryPath || !this.batchData.directoryPath.trim()) {
-      alert('Por favor ingresa la ruta de la carpeta local en tu disco.');
+      this.notificationService.showWarning('Ruta Requerida', 'Por favor ingresa la ruta de la carpeta local en tu disco.');
       return;
     }
 
@@ -159,12 +163,20 @@ export class AdminComponent implements OnInit {
 
     this.mediaService.batchImportSeason(targetId, requestPayload).subscribe({
       next: (response) => {
-        alert(`¡Éxito! Se importaron en lote ${response.importedCount} episodio(s) para "${this.batchData.mediaTitle}" desde ${this.batchData.directoryPath}.\nArchivos detectados: ${response.importedFileNames.join(', ')}`);
+        const title = '¡Importación Incremental Completada!';
+        const message = `Se han procesado los episodios para "${this.batchData.mediaTitle}".\n\n• Episodios Nuevos Importados: ${response.importedCount}\n• Episodios Omitidos (Ya Existentes): ${response.skippedCount}`;
+
+        this.notificationService.showSuccess(
+          title,
+          message,
+          response.importedFileNames,
+          response.skippedFileNames
+        );
         this.loadCatalog();
       },
       error: (err) => {
         const errorMsg = err?.error?.message || `No se pudo encontrar la carpeta '${this.batchData.directoryPath}' o no contiene archivos '${this.batchData.fileExtension}'.`;
-        alert(`Error al procesar el lote:\n${errorMsg}`);
+        this.notificationService.showError('Error al Procesar Lote', errorMsg);
       }
     });
   }

@@ -49,8 +49,10 @@ export interface BatchImportRequest {
 
 export interface BatchImportResponse {
   importedCount: number;
+  skippedCount: number;
   seasonId: number;
   importedFileNames: string[];
+  skippedFileNames: string[];
 }
 
 @Injectable({

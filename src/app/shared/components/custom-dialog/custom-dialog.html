@@ -1,0 +1,42 @@
+<div class="custom-dialog-container">
+  <div [class]="headerClass">
+    <div class="icon-glow">
+      <mat-icon class="dialog-icon">{{ iconName }}</mat-icon>
+    </div>
+    <h2 class="dialog-title">{{ data.title }}</h2>
+  </div>
+
+  <div class="dialog-body">
+    <p class="dialog-message">{{ data.message }}</p>
+
+    <div *ngIf="data.details && data.details.length > 0" class="details-box">
+      <ul>
+        <li *ngFor="let detail of data.details">{{ detail }}</li>
+      </ul>
+    </div>
+
+    <div *ngIf="data.importedFileNames && data.importedFileNames.length > 0" class="files-group imported-group">
+      <div class="group-label">
+        <mat-icon>add_circle_outline</mat-icon> Episodios Nuevos ({{ data.importedFileNames.length }}):
+      </div>
+      <div class="files-chips-list">
+        <span *ngFor="let name of data.importedFileNames" class="file-tag imported-tag">{{ name }}</span>
+      </div>
+    </div>
+
+    <div *ngIf="data.skippedFileNames && data.skippedFileNames.length > 0" class="files-group skipped-group">
+      <div class="group-label">
+        <mat-icon>block</mat-icon> Episodios Omitidos ({{ data.skippedFileNames.length }}):
+      </div>
+      <div class="files-chips-list">
+        <span *ngFor="let name of data.skippedFileNames" class="file-tag skipped-tag">{{ name }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialog-actions">
+    <button mat-raised-button color="primary" class="confirm-btn" (click)="close()">
+      {{ data.buttonText || 'Entendido' }}
+    </button>
+  </div>
+</div>

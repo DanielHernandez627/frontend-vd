@@ -9,3 +9,18 @@ html, body {
   color: #f8fafc;
 }
 
+.custom-dialog-panel {
+  .mat-mdc-dialog-container .mdc-dialog__surface {
+    background-color: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+}
+
+.cdk-overlay-backdrop.cdk-overlay-backdrop-showing {
+  backdrop-filter: blur(6px);
+  background-color: rgba(15, 23, 42, 0.75);
+}
+
+
