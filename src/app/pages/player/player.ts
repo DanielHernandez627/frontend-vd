@@ -1,10 +1,10 @@
-import { Component, Input, OnInit, ElementRef, ViewChild } from '@angular/core';
+import { Component, Input, OnInit, ElementRef, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
-import { RouterLink } from '@angular/router';
-import { MediaService, SkipTimestamp } from '../../services/media.service';
+import { RouterLink, ActivatedRoute } from '@angular/router';
+import { MediaService, MediaContent, Season, Episode, SkipTimestamp } from '../../services/media.service';
 
 @Component({
   selector: 'app-player',
@@ -16,201 +16,103 @@ import { MediaService, SkipTimestamp } from '../../services/media.service';
     MatCardModule,
     RouterLink
   ],
-  template: `
-    <div class="player-container">
-      <div class="top-nav">
-        <a mat-stroked-button class="back-btn" routerLink="/catalog">
-          <mat-icon>arrow_back</mat-icon> Volver al Catálogo
-        </a>
-        <h2 class="content-title">Reproduciendo Contenido ID: {{ id }}</h2>
-      </div>
-
-      <mat-card class="video-card">
-        <div class="video-wrapper">
-          <!-- Reproductor de Video HTML5 con Streaming HTTP 206 -->
-          <video
-            #videoPlayer
-            class="video-element"
-            [src]="videoStreamUrl"
-            (timeupdate)="onTimeUpdate($event)"
-            controls
-            preload="metadata">
-          </video>
-
-          <!-- Fallback Visual si no hay video local disponible -->
-          <div *ngIf="showPlaceholder" class="video-placeholder-overlay">
-            <mat-icon class="video-icon">ondemand_video</mat-icon>
-            <p class="placeholder-text">Transmisión de Video en Vivo • HTTP 206 Partial Content (Spring Boot)</p>
-          </div>
-
-          <!-- Botón Flotante de Skip Intro (Glassmorphism Degradado Azul/Violeta) -->
-          <button
-            *ngIf="currentSkipInterval"
-            class="skip-intro-btn"
-            (click)="executeSkip()">
-            <mat-icon>fast_forward</mat-icon> {{ currentSkipInterval.label || 'Saltar Opening (+90s)' }}
-          </button>
-        </div>
-      </mat-card>
-    </div>
-  `,
-  styles: [`
-    .player-container {
-      padding: 2rem;
-      max-width: 1050px;
-      margin: 0 auto;
-    }
-    .top-nav {
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
-      margin-bottom: 1.75rem;
-
-      .back-btn {
-        color: #ffffff !important;
-        border-color: rgba(255, 255, 255, 0.3) !important;
-        font-weight: 500;
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.05);
-
-        &:hover {
-          background: rgba(255, 255, 255, 0.15) !important;
-        }
-
-        mat-icon {
-          color: #ffffff !important;
-        }
-      }
-
-      .content-title {
-        margin: 0;
-        font-size: 1.5rem;
-        font-weight: 600;
-        color: #ffffff;
-      }
-    }
-    .video-card {
-      background: #000;
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    .video-wrapper {
-      position: relative;
-      width: 100%;
-      height: 520px;
-      background: #000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .video-element {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }
-    .video-placeholder-overlay {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: radial-gradient(circle, #1e293b 0%, #090d16 100%);
-      pointer-events: none;
-
-      .video-icon {
-        font-size: 80px;
-        width: 80px;
-        height: 80px;
-        color: #38bdf8;
-        margin-bottom: 1rem;
-      }
-      .placeholder-text {
-        color: #cbd5e1;
-        font-size: 1.1rem;
-        font-weight: 500;
-      }
-    }
-    .skip-intro-btn {
-      position: absolute;
-      bottom: 3.5rem;
-      right: 2.5rem;
-      z-index: 10;
-      background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
-      color: #ffffff !important;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 28px;
-      padding: 0.75rem 1.6rem;
-      font-size: 0.95rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      cursor: pointer;
-      box-shadow: 0 4px 20px rgba(37, 99, 235, 0.5);
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-
-      mat-icon {
-        color: #ffffff !important;
-      }
-
-      &:hover {
-        transform: translateY(-3px) scale(1.04);
-        box-shadow: 0 8px 25px rgba(124, 58, 237, 0.7);
-        background: linear-gradient(135deg, #1d4ed8 0%, #6d28d9 100%);
-      }
-
-      &:active {
-        transform: translateY(0) scale(0.98);
-      }
-    }
-  `]
+  templateUrl: './player.html',
+  styleUrl: './player.scss'
 })
 export class PlayerComponent implements OnInit {
   @Input() id!: string;
   @ViewChild('videoPlayer') videoPlayerRef!: ElementRef<HTMLVideoElement>;
 
+  mediaContent: MediaContent | null = null;
+  selectedSeason: Season | null = null;
+  selectedEpisode: Episode | null = null;
   videoStreamUrl: string = '';
   showPlaceholder: boolean = true;
   skipIntervals: SkipTimestamp[] = [];
   currentSkipInterval: SkipTimestamp | null = null;
 
-  // Intervalo de demostración stático por defecto si no viene de la API
-  demoSkipInterval: SkipTimestamp = {
-    id: 1,
-    type: 'INTRO',
-    startTimeSeconds: 1,
-    endTimeSeconds: 90,
-    label: 'Saltar Opening (+90s)'
-  };
+  constructor(
+    private mediaService: MediaService,
+    private route: ActivatedRoute,
+    private cdr: ChangeDetectorRef
+  ) {}
 
-  constructor(private mediaService: MediaService) {}
-
-  ngOnInit() {
+  ngOnInit(): void {
     if (this.id) {
-      this.videoStreamUrl = this.mediaService.getVideoStreamUrl(this.id);
-      this.mediaService.getSkipTimestamps(this.id).subscribe({
-        next: (timestamps) => {
-          if (timestamps && timestamps.length > 0) {
-            this.skipIntervals = timestamps;
-          } else {
-            this.skipIntervals = [this.demoSkipInterval];
-          }
-          this.currentSkipInterval = this.demoSkipInterval; // Activo para vista previa estática
-        },
-        error: () => {
-          this.skipIntervals = [this.demoSkipInterval];
-          this.currentSkipInterval = this.demoSkipInterval;
-        }
-      });
-    } else {
-      this.currentSkipInterval = this.demoSkipInterval;
+      this.loadMediaContentDetails(this.id);
     }
   }
 
-  onTimeUpdate(event: Event) {
+  loadMediaContentDetails(contentId: string): void {
+    const targetEpId = this.route.snapshot.queryParams['episodeId'];
+
+    this.mediaService.getMediaContentDetails(contentId).subscribe({
+      next: (data) => {
+        this.mediaContent = data;
+        if (data.seasons && data.seasons.length > 0) {
+          if (targetEpId) {
+            const requestedEpId = parseInt(targetEpId, 10);
+            for (const season of data.seasons) {
+              const matchedEp = season.episodes?.find(e => e.id === requestedEpId);
+              if (matchedEp) {
+                this.selectedSeason = season;
+                this.selectEpisode(matchedEp);
+                return;
+              }
+            }
+          }
+          this.selectSeason(data.seasons[0]);
+        }
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.loadDirectEpisodeFallback(contentId);
+      }
+    });
+  }
+
+  selectSeason(season: Season): void {
+    this.selectedSeason = season;
+    if (season.episodes && season.episodes.length > 0) {
+      this.selectEpisode(season.episodes[0]);
+    } else {
+      this.selectedEpisode = null;
+      this.videoStreamUrl = '';
+      this.showPlaceholder = true;
+    }
+    this.cdr.detectChanges();
+  }
+
+  selectEpisode(episode: Episode): void {
+    this.selectedEpisode = episode;
+    this.videoStreamUrl = this.mediaService.getVideoStreamUrl(episode.id);
+    this.showPlaceholder = false;
+    this.loadSkipTimestamps(episode.id);
+    this.cdr.detectChanges();
+  }
+
+  loadSkipTimestamps(episodeId: number): void {
+    this.mediaService.getSkipTimestamps(episodeId).subscribe({
+      next: (timestamps) => {
+        this.skipIntervals = timestamps || [];
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.skipIntervals = [];
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  loadDirectEpisodeFallback(episodeIdStr: string): void {
+    const episodeIdNum = parseInt(episodeIdStr, 10);
+    this.videoStreamUrl = this.mediaService.getVideoStreamUrl(episodeIdNum);
+    this.showPlaceholder = false;
+    this.loadSkipTimestamps(episodeIdNum);
+    this.cdr.detectChanges();
+  }
+
+  onTimeUpdate(event: Event): void {
     const video = event.target as HTMLVideoElement;
     if (!video) return;
 
@@ -222,16 +124,17 @@ export class PlayerComponent implements OnInit {
     this.currentSkipInterval = this.skipIntervals.find(
       interval => currentTime >= interval.startTimeSeconds && currentTime <= interval.endTimeSeconds
     ) || null;
+    this.cdr.detectChanges();
   }
 
-  executeSkip() {
+  executeSkip(): void {
     if (this.currentSkipInterval && this.videoPlayerRef && this.videoPlayerRef.nativeElement) {
       this.videoPlayerRef.nativeElement.currentTime = this.currentSkipInterval.endTimeSeconds;
       this.currentSkipInterval = null;
+      this.cdr.detectChanges();
     } else {
-      // Si está en modo placeholder, simular la acción de adelanto
-      console.log('Skip ejecutado!');
       this.currentSkipInterval = null;
+      this.cdr.detectChanges();
     }
   }
 }

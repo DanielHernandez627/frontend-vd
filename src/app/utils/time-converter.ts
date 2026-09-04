@@ -1,28 +1,47 @@
-/**
- * Convierte un texto en formato "MM:SS" o "HH:MM:SS" (ej. "0:38" o "02:11") a segundos totales.
- * Si el usuario ingresa un número simple, se asume como segundos.
- */
-export function timeStringToSeconds(timeStr: string | number): number {
-  if (typeof timeStr === 'number') return timeStr;
-  if (!timeStr || typeof timeStr !== 'string') return 0;
+export function convertTimeToSeconds(timeInput: string | number): number {
+  if (typeof timeInput === 'number') {
+    return timeInput;
+  }
+  if (!timeInput || typeof timeInput !== 'string') {
+    return 0;
+  }
 
-  const parts = timeStr.trim().split(':').map(p => parseInt(p, 10));
-  if (parts.some(isNaN)) return 0;
+  const timeSegments = timeInput.trim().split(':').map(segment => parseInt(segment, 10));
+  if (timeSegments.some(isNaN)) {
+    return 0;
+  }
 
-  if (parts.length === 1) return parts[0]; // Solo segundos (ej. "38" -> 38)
-  if (parts.length === 2) return parts[0] * 60 + parts[1]; // MM:SS (ej. "2:11" -> 2*60 + 11 = 131)
-  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2]; // HH:MM:SS
+  const isRawSeconds = timeSegments.length === 1;
+  if (isRawSeconds) {
+    return timeSegments[0];
+  }
+
+  const isMinutesSeconds = timeSegments.length === 2;
+  if (isMinutesSeconds) {
+    const [minutes, seconds] = timeSegments;
+    return minutes * 60 + seconds;
+  }
+
+  const isHoursMinutesSeconds = timeSegments.length === 3;
+  if (isHoursMinutesSeconds) {
+    const [hours, minutes, seconds] = timeSegments;
+    return hours * 3600 + minutes * 60 + seconds;
+  }
+
   return 0;
 }
 
-/**
- * Convierte segundos totales al formato legible "MM:SS".
- * Ejemplo: 131 -> "02:11" | 38 -> "00:38"
- */
-export function secondsToTimeString(totalSeconds: number): string {
-  if (!totalSeconds || totalSeconds < 0) return '00:00';
+export function convertSecondsToFormattedTime(totalSeconds: number): string {
+  if (!totalSeconds || totalSeconds < 0) {
+    return '00:00';
+  }
+
   const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  const pad = (num: number) => num.toString().padStart(2, '0');
-  return `${pad(minutes)}:${pad(seconds)}`;
+  const remainingSeconds = totalSeconds % 60;
+  const formatTwoDigits = (value: number) => value.toString().padStart(2, '0');
+
+  return `${formatTwoDigits(minutes)}:${formatTwoDigits(remainingSeconds)}`;
 }
+
+export const timeStringToSeconds = convertTimeToSeconds;
+export const secondsToTimeString = convertSecondsToFormattedTime;

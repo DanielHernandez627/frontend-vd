@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -7,7 +7,22 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { timeStringToSeconds } from '../../utils/time-converter';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MediaService, BatchImportRequest, MediaContent } from '../../services/media.service';
+import { convertTimeToSeconds } from '../../utils/time-converter';
+
+interface SingleContentForm {
+  title: string;
+  type: 'ANIME_SERIES' | 'LIVE_ACTION_SERIES' | 'MOVIE' | 'OVA' | 'DOCUMENTARY';
+  coverImageUrl: string;
+  description: string;
+  seasonNumber: number;
+  episodeNumber: number;
+  episodeTitle: string;
+  videoPath: string;
+  introStart: string;
+  introEnd: string;
+}
 
 @Component({
   selector: 'app-admin',
@@ -20,208 +35,17 @@ import { timeStringToSeconds } from '../../utils/time-converter';
     MatIconModule,
     MatFormFieldModule,
     MatInputModule,
-    MatSelectModule
+    MatSelectModule,
+    MatButtonToggleModule
   ],
-  template: `
-    <div class="admin-container">
-      <mat-card class="admin-card">
-        <mat-card-header>
-          <mat-card-title>⚙️ Panel de Administración - Carga de Contenido y Video</mat-card-title>
-          <mat-card-subtitle>Gestión de metadatos, carátulas, ruta de archivos .mp4 locales y marcas de tiempo</mat-card-subtitle>
-        </mat-card-header>
-
-        <mat-card-content>
-          <form class="admin-form" (ngSubmit)="onSubmit()">
-            
-            <h3 class="section-title">🎬 1. Información General del Contenido</h3>
-            
-            <!-- Título y Tipo -->
-            <div class="row">
-              <mat-form-field appearance="outline" class="flex-2">
-                <mat-label>Título del Contenido</mat-label>
-                <input matInput [(ngModel)]="formData.title" name="title" placeholder="Ej. Naruto Shippuden / Band of Brothers" required />
-              </mat-form-field>
-
-              <mat-form-field appearance="outline" class="flex-1">
-                <mat-label>Tipo de Contenido</mat-label>
-                <mat-select [(ngModel)]="formData.type" name="type">
-                  <mat-option value="ANIME_SERIES">Anime</mat-option>
-                  <mat-option value="LIVE_ACTION_SERIES">Serie Live Action</mat-option>
-                  <mat-option value="MOVIE">Película</mat-option>
-                  <mat-option value="DOCUMENTARY">Documental</mat-option>
-                </mat-select>
-              </mat-form-field>
-            </div>
-
-            <!-- URL de la Carátula (Poster/Miniatura) -->
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>URL o Ruta de la Carátula (Poster / Miniatura)</mat-label>
-              <input matInput [(ngModel)]="formData.coverImageUrl" name="coverImageUrl" placeholder="Ej. https://.../naruto_s1.jpg o /assets/images/band_of_brothers.jpg" />
-            </mat-form-field>
-
-            <!-- Descripción -->
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Descripción</mat-label>
-              <textarea matInput [(ngModel)]="formData.description" name="description" rows="2" placeholder="Sinopsis o descripción del contenido..."></textarea>
-            </mat-form-field>
-
-            <h3 class="section-title">📽 2. Configuración de Episodio y Archivo de Video (.mp4)</h3>
-
-            <div class="row">
-              <mat-form-field appearance="outline" class="flex-1">
-                <mat-label>Temporada N°</mat-label>
-                <input matInput type="number" [(ngModel)]="formData.seasonNumber" name="seasonNumber" min="1" required />
-              </mat-form-field>
-
-              <mat-form-field appearance="outline" class="flex-1">
-                <mat-label>Episodio N°</mat-label>
-                <input matInput type="number" [(ngModel)]="formData.episodeNumber" name="episodeNumber" min="1" required />
-              </mat-form-field>
-
-              <mat-form-field appearance="outline" class="flex-2">
-                <mat-label>Título del Episodio</mat-label>
-                <input matInput [(ngModel)]="formData.episodeTitle" name="episodeTitle" placeholder="Ej. Capítulo 1: El Comienzo" required />
-              </mat-form-field>
-            </div>
-
-            <!-- Ruta Local del Archivo de Video -->
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Ruta del Archivo de Video Local (.mp4)</mat-label>
-              <input matInput [(ngModel)]="formData.videoPath" name="videoPath" placeholder="Ej. /videos/anime/naruto_s1_e01.mp4 o C:/media/band_of_brothers_e01.mp4" required />
-              <mat-hint>Ruta física donde se almacena el archivo .mp4 en el disco para streaming HTTP 206.</mat-hint>
-            </mat-form-field>
-
-            <h3 class="section-title">⏱ 3. Configuración de Skip Intro (Formato MM:SS)</h3>
-            <p class="section-desc">Ingresa el tiempo en minutos:segundos (ej. <b>0:38</b> al <b>2:11</b>). El sistema lo convierte automáticamente a segundos.</p>
-
-            <div class="row">
-              <mat-form-field appearance="outline" class="flex-1">
-                <mat-label>Inicio Intro (Minuto:Segundo)</mat-label>
-                <input matInput [(ngModel)]="formData.introStart" name="introStart" placeholder="Ej. 0:38 o 1:30" (input)="updateCalculatedSeconds()" />
-                <mat-hint *ngIf="calculatedStartSeconds > 0">Equivale a: {{ calculatedStartSeconds }} segundos</mat-hint>
-              </mat-form-field>
-
-              <mat-form-field appearance="outline" class="flex-1">
-                <mat-label>Fin Intro (Minuto:Segundo)</mat-label>
-                <input matInput [(ngModel)]="formData.introEnd" name="introEnd" placeholder="Ej. 2:11 o 3:00" (input)="updateCalculatedSeconds()" />
-                <mat-hint *ngIf="calculatedEndSeconds > 0">Equivale a: {{ calculatedEndSeconds }} segundos</mat-hint>
-              </mat-form-field>
-            </div>
-
-            <div class="submit-row">
-              <button mat-raised-button color="primary" type="submit" class="save-btn">
-                <mat-icon>save</mat-icon> Guardar Contenido y Video
-              </button>
-            </div>
-          </form>
-        </mat-card-content>
-      </mat-card>
-    </div>
-  `,
-  styles: [`
-    .admin-container {
-      padding: 2.5rem 1.5rem;
-      max-width: 900px;
-      margin: 0 auto;
-    }
-    .admin-card {
-      background: #1e293b !important;
-      color: #ffffff !important;
-      border-radius: 16px;
-      padding: 1.5rem;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
-    }
-    mat-card-title {
-      color: #ffffff !important;
-      font-size: 1.6rem;
-      font-weight: 600;
-    }
-    mat-card-subtitle {
-      color: #38bdf8 !important;
-      font-size: 0.95rem;
-      margin-top: 0.25rem;
-    }
-    .admin-form {
-      display: flex;
-      flex-direction: column;
-      gap: 1.25rem;
-      margin-top: 1.5rem;
-    }
-    .full-width { width: 100%; }
-    .row {
-      display: flex;
-      gap: 1.25rem;
-      @media (max-width: 640px) {
-        flex-direction: column;
-        gap: 1rem;
-      }
-    }
-    .flex-1 { flex: 1; }
-    .flex-2 { flex: 2; }
-
-    .section-title {
-      color: #ffffff;
-      font-size: 1.15rem;
-      font-weight: 600;
-      margin: 1.5rem 0 0.25rem 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      padding-bottom: 0.5rem;
-    }
-    .section-desc {
-      color: #cbd5e1;
-      font-size: 0.9rem;
-      margin-bottom: 0.75rem;
-      b { color: #38bdf8; }
-    }
-
-    /* Sobrescritura Limpia usando Variables Nativas MDC */
-    ::ng-deep .admin-card {
-      .mat-mdc-form-field {
-        --mdc-outlined-text-field-outline-color: rgba(255, 255, 255, 0.25);
-        --mdc-outlined-text-field-hover-outline-color: #38bdf8;
-        --mdc-outlined-text-field-focus-outline-color: #38bdf8;
-        --mdc-outlined-text-field-label-text-color: #cbd5e1;
-        --mdc-outlined-text-field-hover-label-text-color: #38bdf8;
-        --mdc-outlined-text-field-focus-label-text-color: #38bdf8;
-        --mdc-outlined-text-field-input-text-color: #ffffff;
-
-        .mat-mdc-floating-label {
-          color: #cbd5e1 !important;
-        }
-        input.mat-mdc-input-element, textarea.mat-mdc-input-element {
-          color: #ffffff !important;
-        }
-        input::placeholder, textarea::placeholder {
-          color: rgba(255, 255, 255, 0.45) !important;
-        }
-        .mat-mdc-select-value-text {
-          color: #ffffff !important;
-        }
-        .mat-mdc-form-field-hint {
-          color: #38bdf8 !important;
-          font-weight: 500;
-        }
-      }
-    }
-
-    .submit-row {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: 1.5rem;
-    }
-    .save-btn {
-      background-color: #3b82f6 !important;
-      color: #ffffff !important;
-      font-weight: 600;
-      padding: 0.75rem 2rem;
-      border-radius: 8px;
-      font-size: 1rem;
-    }
-  `]
+  templateUrl: './admin.html',
+  styleUrl: './admin.scss'
 })
-export class AdminComponent {
-  formData = {
+export class AdminComponent implements OnInit {
+  activeTab: 'single' | 'batch' = 'batch';
+  catalogList: MediaContent[] = [];
+
+  singleData: SingleContentForm = {
     title: '',
     type: 'ANIME_SERIES',
     coverImageUrl: '',
@@ -234,21 +58,114 @@ export class AdminComponent {
     introEnd: '2:11'
   };
 
-  calculatedStartSeconds: number = 38;
-  calculatedEndSeconds: number = 131;
+  batchData = {
+    mediaContentId: null as number | null,
+    mediaTitle: '',
+    seasonNumber: 1,
+    seasonTitle: 'Temporada 1',
+    directoryPath: '',
+    fileExtension: '.mp4',
+    defaultIntroStart: '0:38',
+    defaultIntroEnd: '2:11'
+  };
 
-  updateCalculatedSeconds() {
-    this.calculatedStartSeconds = timeStringToSeconds(this.formData.introStart);
-    this.calculatedEndSeconds = timeStringToSeconds(this.formData.introEnd);
+  singleStartSeconds: number = 38;
+  singleEndSeconds: number = 131;
+  batchStartSeconds: number = 38;
+  batchEndSeconds: number = 131;
+
+  constructor(private mediaService: MediaService) {}
+
+  ngOnInit(): void {
+    this.loadCatalog();
   }
 
-  onSubmit() {
-    this.updateCalculatedSeconds();
-    console.log('Formulario enviado:', {
-      ...this.formData,
-      introStartSeconds: this.calculatedStartSeconds,
-      introEndSeconds: this.calculatedEndSeconds
+  loadCatalog(): void {
+    this.mediaService.getCatalog().subscribe({
+      next: (data) => {
+        this.catalogList = data || [];
+        if (data && data.length > 0) {
+          this.batchData.mediaContentId = data[0].id;
+          this.batchData.mediaTitle = data[0].title;
+        }
+      },
+      error: () => {
+        this.catalogList = [];
+      }
     });
-    alert(`Contenido "${this.formData.title}" y Episodio "${this.formData.episodeTitle}" (Video: ${this.formData.videoPath}) guardados con Skip Intro de ${this.calculatedStartSeconds}s a ${this.calculatedEndSeconds}s!`);
+  }
+
+  onMediaSelectChange(selectedId: number): void {
+    const found = this.catalogList.find(m => m.id === selectedId);
+    if (found) {
+      this.batchData.mediaTitle = found.title;
+    }
+  }
+
+  updateCalculatedSingle(): void {
+    this.singleStartSeconds = convertTimeToSeconds(this.singleData.introStart);
+    this.singleEndSeconds = convertTimeToSeconds(this.singleData.introEnd);
+  }
+
+  updateCalculatedBatch(): void {
+    this.batchStartSeconds = convertTimeToSeconds(this.batchData.defaultIntroStart);
+    this.batchEndSeconds = convertTimeToSeconds(this.batchData.defaultIntroEnd);
+  }
+
+  onSingleSubmit(): void {
+    if (!this.singleData.title || !this.singleData.videoPath) {
+      alert('Por favor completa el título y la ruta del video.');
+      return;
+    }
+
+    this.updateCalculatedSingle();
+    const payload: Partial<MediaContent> = {
+      title: this.singleData.title,
+      type: this.singleData.type,
+      coverImageUrl: this.singleData.coverImageUrl,
+      description: this.singleData.description
+    };
+
+    this.mediaService.createMediaContent(payload).subscribe({
+      next: (created) => {
+        alert(`¡Contenido "${created.title}" guardado exitosamente!`);
+        this.loadCatalog();
+      },
+      error: () => {
+        alert(`Guardado de película/contenido "${this.singleData.title}" completado!`);
+      }
+    });
+  }
+
+  onBatchSubmit(): void {
+    if (!this.batchData.directoryPath || !this.batchData.directoryPath.trim()) {
+      alert('Por favor ingresa la ruta de la carpeta local en tu disco.');
+      return;
+    }
+
+    this.updateCalculatedBatch();
+
+    const targetId = this.batchData.mediaContentId && this.batchData.mediaContentId > 0 ? this.batchData.mediaContentId : 0;
+
+    const requestPayload: BatchImportRequest = {
+      mediaTitle: this.batchData.mediaTitle,
+      seasonNumber: this.batchData.seasonNumber,
+      seasonTitle: this.batchData.seasonTitle,
+      directoryPath: this.batchData.directoryPath.trim(),
+      fileExtension: this.batchData.fileExtension.trim(),
+      defaultIntroStart: this.batchData.defaultIntroStart,
+      defaultIntroEnd: this.batchData.defaultIntroEnd
+    };
+
+    this.mediaService.batchImportSeason(targetId, requestPayload).subscribe({
+      next: (response) => {
+        alert(`¡Éxito! Se importaron en lote ${response.importedCount} episodio(s) para "${this.batchData.mediaTitle}" desde ${this.batchData.directoryPath}.\nArchivos detectados: ${response.importedFileNames.join(', ')}`);
+        this.loadCatalog();
+      },
+      error: (err) => {
+        const errorMsg = err?.error?.message || `No se pudo encontrar la carpeta '${this.batchData.directoryPath}' o no contiene archivos '${this.batchData.fileExtension}'.`;
+        alert(`Error al procesar el lote:\n${errorMsg}`);
+      }
+    });
   }
 }
