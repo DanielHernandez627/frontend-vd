@@ -1,59 +1,74 @@
-# FrontendVd
+# 🎨 Frontend VD - Angular Web Platform
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.1.6.
+Aplicación Single Page Application (SPA) desarrollada en **Angular 22** y **Angular Material**, diseñada con una estética **Dark Glassmorphism** (colores tailored HSL, gradientes suaves, bordes traslúcidos con `backdrop-filter` y notificaciones modales integradas).
 
-## Development server
+---
 
-To start a local development server, run:
+## 🛠 Tecnologías y Librerías
 
-```bash
-ng serve
+- **Framework**: Angular 22 (Standalone Components + Lazy Loading)
+- **UI Components**: Angular Material 22 (`@angular/material`, `@angular/cdk`)
+- **Estilos**: Vanilla SCSS (Design Tokens, Glassmorphism, Custom Scrollbars)
+- **Iconografía & Tipografía**: Google Material Symbols / Icons + Font Roboto
+- **Servidor Web Producción**: Nginx Alpine (`Dockerfile` multi-stage)
+
+---
+
+## 📁 Estructura del Proyecto
+
+```text
+frontend-vd/
+├── src/
+│   ├── app/
+│   │   ├── pages/
+│   │   │   ├── catalog/              # Vistas del Catálogo Multimedia (CatalogComponent)
+│   │   │   ├── player/               # Reproductor de Video HTTP 206 + Skip Intro (PlayerComponent)
+│   │   │   └── admin/                # Panel de Carga Masiva e Importación (AdminComponent)
+│   │   ├── shared/
+│   │   │   ├── components/custom-dialog/ # Componente Modal Dark Glassmorphic (CustomDialogComponent)
+│   │   │   └── services/notification.service.ts # Servicio global de modales (showSuccess, showError...)
+│   │   ├── services/
+│   │   │   └── media.service.ts      # Cliente HTTP HttpClient para consumo de la API Backend
+│   │   ├── utils/
+│   │   │   └── time-converter.ts     # Conversión utilitaria MM:SS <-> Segundos
+│   │   ├── app.html                  # Layout base con Navegación MatSidenav
+│   │   ├── app.routes.ts              # Enrutamiento con Lazy Loading por vistas
+│   │   └── app.scss                  # Estilos globales y barra lateral
+│   ├── styles.scss                   # Tema global y estilos de overlays CDK
+│   └── index.html                    # Entrada HTML principal
+├── Dockerfile                        # Multi-stage build Node 22 + Nginx Alpine
+├── nginx.conf                        # Configuración Nginx con soporte SPA y Partial Content
+└── package.json                      # Descriptores de dependencias y scripts
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+---
 
-## Code scaffolding
+## 🚀 Ejecución en Desarrollo
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+### Prerrequisitos
+- Node.js v22 (LTS)
+- npm v10+
 
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+### Comandos de Construcción y Ejecución
 
 ```bash
-ng generate --help
+# Instalación de dependencias
+npm install
+
+# Iniciar servidor de desarrollo local (Puerto 4200)
+npm start
+
+# Compilación de producción (Genera artefactos en dist/frontend-vd/browser)
+NG_CLI_ANALYTICS=false npm run build
 ```
 
-## Building
+---
 
-To build the project run:
+## 🎨 Características Visuales Destacadas
 
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+1. **🔔 Modales Dark Glassmorphic (`NotificationService`)**:
+   - Reemplaza los diálogos JavaScript nativos por cuadros flotantes oscuros con bordes resplandecientes e iconos dinámicos según el tipo de estado.
+2. **📜 Scrollbar Suave de Episodios**:
+   - Limitación a `220px` en tarjetas del catálogo con barra de desplazamiento personalizada azul cian.
+3. **⏩ Botón Flotante de Skip Intro**:
+   - Superposición animada sobre el elemento HTML5 `<video>` activa automáticamente durante el intervalo del opening (`0:38` al `2:11`).

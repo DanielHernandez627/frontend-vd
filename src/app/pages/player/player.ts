@@ -50,6 +50,13 @@ export class PlayerComponent implements OnInit {
       next: (data) => {
         this.mediaContent = data;
         if (data.seasons && data.seasons.length > 0) {
+          data.seasons.sort((a, b) => (a.seasonNumber || 0) - (b.seasonNumber || 0));
+          data.seasons.forEach(season => {
+            if (season.episodes) {
+              season.episodes.sort((a, b) => (a.episodeNumber || 0) - (b.episodeNumber || 0));
+            }
+          });
+
           if (targetEpId) {
             const requestedEpId = parseInt(targetEpId, 10);
             for (const season of data.seasons) {

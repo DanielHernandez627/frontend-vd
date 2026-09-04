@@ -164,6 +164,21 @@ mat-card-content {
     display: flex;
     flex-direction: column;
     gap: 0.45rem;
+    max-height: 210px;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+
+    &::-webkit-scrollbar {
+      width: 5px;
+    }
+    &::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+      border-radius: 4px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: #3b82f6;
+      border-radius: 4px;
+    }
   }
 
   .episode-chip {
