@@ -6,7 +6,7 @@
 .app-sidenav {
   width: 260px;
   background: #1e293b;
-  color: #f8fafc;
+  color: #ffffff;
 
   .sidenav-header {
     display: flex;
@@ -26,19 +26,44 @@
       margin: 0;
       font-size: 1.25rem;
       font-weight: 600;
-      color: #f8fafc;
+      color: #ffffff;
     }
   }
 
   mat-nav-list {
+    padding-top: 1rem;
+
     a {
-      color: #cbd5e1;
-      &:hover {
-        background: #334155;
+      color: #ffffff !important;
+      font-weight: 500;
+      margin: 0.25rem 0.75rem;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+
+      mat-icon {
+        color: #f8fafc !important;
       }
+
+      span {
+        color: #ffffff !important;
+      }
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.1) !important;
+      }
+
       &.active {
-        color: #38bdf8;
-        background: rgba(56, 189, 248, 0.1);
+        color: #38bdf8 !important;
+        background: rgba(56, 189, 248, 0.18) !important;
+        font-weight: 600;
+
+        mat-icon {
+          color: #38bdf8 !important;
+        }
+
+        span {
+          color: #38bdf8 !important;
+        }
       }
     }
   }
@@ -46,15 +71,15 @@
 
 .app-toolbar {
   background: #1e293b !important;
-  color: #f8fafc !important;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 
   .brand-title {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     font-size: 1.25rem;
-    font-weight: 500;
+    font-weight: 600;
     margin-left: 0.5rem;
 
     .brand-icon {
@@ -67,9 +92,12 @@
   }
 
   a {
-    color: #cbd5e1;
+    color: #ffffff !important;
+    font-weight: 500;
+    margin-left: 0.5rem;
+
     &.active-link {
-      color: #38bdf8;
+      color: #38bdf8 !important;
       font-weight: 600;
     }
   }
